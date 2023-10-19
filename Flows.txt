@@ -1,0 +1,8 @@
+MyList
+
+1. getting the closest node
+	start from head and tail pointer -> figure out which
+
+2. add a node after index
+    case 1: in between
+    case 2: tail

@@ -3,22 +3,40 @@ import java.util.EmptyStackException;
 public class MyList<T>{
     private int size = 0;
 
-    private int frequency = 1000;
+    private final int frequency = 1000;
 
     private Node<T> head;
     private Node<T> tail;
+
+   /* private Node<T> headPointer;
+    private Node<T> tailPointer;
+    int headPointerIndex;
+    int tailPointerIndex;*/
 
     MyList(){
 
     }
 
-    static class Node<T>{
+    private static class Node<T>{
         T item;
 
         Node<T> prev, next, prevNode, nextNode;
 
         Node(T item){
             this.item = item;
+        }
+    }
+
+    private static class ReturnObject<T>{
+        Node<T> node;
+        int index;
+
+        boolean isLowerClosest;
+
+        ReturnObject(Node<T> node, int index, boolean isLowerClosest){
+            this.node = node;
+            this.index = index;
+            this.isLowerClosest = isLowerClosest;
         }
     }
 
@@ -58,7 +76,6 @@ public class MyList<T>{
         Node<T> nextNode = nodeToBeDeleted.next;
         Node<T> prevNode = nodeToBeDeleted.prev;
 
-        // 1-2
         if(this.size == 1){
             this.head = null;
             this.tail = null;
@@ -86,6 +103,25 @@ public class MyList<T>{
         return getNode(index).item;
     }
 
+    // 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+    // 1 3 5 7 10
+    // 1 3 6 8 11
+    // 1 3 6 9 12
+    // 1 4 7 10 13
+    // 1 4 7 10 14
+    // 1 4 8 11 15
+    private void updatePointers(){
+        Node<T> currentPointer = this.head;
+
+        if(currentPointer.prevNode != null){
+
+        }else if(currentPointer.nextNode != null){
+
+        }else{
+
+        }
+    }
+
     // add a node after the given index or node
     private void addAfter(Node<T> node, Node<T> nodeToBeAdded){
         Node<T> next = node.next;
@@ -102,15 +138,19 @@ public class MyList<T>{
 
     // gets a node object in the list
     private Node<T> getNode(int index){
-        Node<T> pointer = getClosest(index);
+        ReturnObject<T> returnObject = getClosest(index);
 
-        if(pointer == tail){
-            for(int i = this.size-1; i > index; i--){
-                pointer = pointer.prev;
+        Node<T> pointer = returnObject.node;
+        int closestIndex = returnObject.index;
+        boolean isLowerClosest = returnObject.isLowerClosest;
+
+        if(isLowerClosest){
+            for(int i = closestIndex; i < index; i++){
+                pointer = pointer.next;
             }
         }else{
-            for(int i = 0; i < index; i++){
-                pointer = pointer.next;
+            for(int i = closestIndex; i > index; i--){
+                pointer = pointer.prev;
             }
         }
 
@@ -118,8 +158,7 @@ public class MyList<T>{
     }
 
     // gets the closest node pivot pointer from a given index
-    // 1 2 3 4 5
-    private Node<T> getClosest(int index){
+    private ReturnObject<T> getClosest(int index){
         if(isEmpty()){
             throw new EmptyStackException();
         }
@@ -131,28 +170,43 @@ public class MyList<T>{
         Node<T> lowerPointer = this.head;
         Node<T> higherPointer = this.tail;
         int lowerIndex = 0;
-        int higherIndex = this.size - 1;
-
-        double nextPointerGap = (double)(this.size-1) / 2;
+        int higherIndex = this.size-1;
 
         while(isInRange(index, lowerIndex, higherIndex) && lowerPointer.next != null){
+            int sumRange = lowerIndex + higherIndex;
+
             if((index - lowerIndex) < (higherIndex - index)){
                 // head is closer
                 higherPointer = higherPointer.prevNode;
-                higherIndex = higherIndex - (int)Math.floor(nextPointerGap);
+                higherIndex = higherIndex - (sumRange - index);
 
+                if(index == lowerIndex) {
+                    return new ReturnObject<>(lowerPointer, lowerIndex, true);
+                }
             }else{
-                higherPointer = higherPointer.prevNode;
-                higherIndex -= nextPointerGap;
-                nextPointerGap /= 2;
+                lowerPointer = lowerPointer.nextNode;
+                lowerIndex = lowerIndex + (sumRange - index);
+
+                if(index == higherIndex){
+                    return new ReturnObject<>(higherPointer, higherIndex, false);
+                }
             }
         }
 
-        return null;
+        if(lowerPointerIsCloser(index, lowerIndex, higherIndex)){
+            return new ReturnObject<>(lowerPointer, lowerIndex, true);
+        } else{
+            return new ReturnObject<>(higherPointer, higherIndex, false);
+        }
+
+    }
+
+    private boolean lowerPointerIsCloser(int index, int lowerIndex, int higherIndex){
+        return (index - lowerIndex) < (higherIndex - index);
     }
 
     private boolean isInRange(int index, int lower, int higher){
-        return (index - lower) < (higher - index);
+        return index >= lower && index <= higher;
     }
 
     private boolean isEmpty(){
