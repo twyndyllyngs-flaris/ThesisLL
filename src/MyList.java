@@ -54,7 +54,7 @@ public class MyList<T>{
     }
 
     // adds a node at the end of the list
-    // returns a boolean if successful
+    // 1 2 3 4 5p 6 7 8 9 10p 11 12 13 14p 15 16 17 18 19 20p 21 22 23 24 25 26 27 28 29 30
     public void add(T item){
         Node<T> nodeToBeAdded = new Node<>(item);
 
@@ -68,6 +68,10 @@ public class MyList<T>{
         addAfter(this.tail, nodeToBeAdded);
         this.tail = nodeToBeAdded;
         this.size += 1;
+
+        if(isTimeToAdd()){
+
+        }
     }
 
     // removes a node in the list and returns its value
@@ -103,22 +107,109 @@ public class MyList<T>{
         return getNode(index).item;
     }
 
-    // 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+    // 1 2 3 4 5 6 7 8 9 10
+    private void addPointers(Node<T> parentPointer, Node<T> currentPointer, int lowIndex, int highIndex, int currentIndex, int parentIndex){
+        int range = lowIndex + highIndex;
+
+        if(currentIndex != (range / 2)){
+            Node<T> newPointer = currentPointer.next;
+            newPointer.nextNode = currentPointer.nextNode;
+            newPointer.prevNode = currentPointer.prevNode;
+
+            currentPointer.nextNode = null;
+            currentPointer.prevNode = null;
+
+            currentPointer = currentPointer.next;
+            currentIndex = currentIndex + 1;
+
+            if(currentIndex == (this.size - 1) / 2) {
+                this.head.nextNode = newPointer;
+                this.tail.prevNode = newPointer;
+            }else if(currentIndex <= parentIndex){
+                parentPointer.prevNode = newPointer;
+            }else{
+                parentPointer.nextNode = newPointer;
+            }
+        }
+
+        if(currentPointer.prevNode != null){
+            Node<T> prevNode = currentPointer.prevNode;
+            highIndex = currentIndex;
+            currentIndex = currentIndex / 2;
+            updatePointers(currentPointer, prevNode, lowIndex, highIndex, currentIndex, highIndex);
+        }
+
+        if(currentPointer.nextNode != null){
+            Node<T> nextNode = currentPointer.nextNode;
+            lowIndex = currentIndex;
+            currentIndex = currentIndex + (currentIndex / 2);
+            updatePointers(currentPointer, nextNode, lowIndex, highIndex, currentIndex, lowIndex);
+        }
+
+        if(isLeaf(currentPointer)){
+
+        }
+    }
+
+    private boolean isLeaf(Node<T> node){
+        return node.prevNode == null && node.nextNode == null;
+    }
+
+    // determines if it is time to add more pointers
+    private boolean isTimeToAdd(){
+        return this.size % this.frequency == 0;
+    }
+
+    // 0h 1 2p 3 4m 5 6p 7 8 9 10t               11 12 13 14 15
     // 1 3 5 7 10
     // 1 3 6 8 11
     // 1 3 6 9 12
     // 1 4 7 10 13
     // 1 4 7 10 14
     // 1 4 8 11 15
-    private void updatePointers(){
-        Node<T> currentPointer = this.head;
+    // size = 11
+    // parentPointer = tail (10)
+    // currentPointer = 4
+    // currentIndex = 4
+    // lowIndex = 0
+    // highIndex = 10
+    // updates the middle pointers (forwards)
+    private void updatePointers(Node<T> parentPointer, Node<T> currentPointer, int lowIndex, int highIndex, int currentIndex, int parentIndex){
+        int range = lowIndex + highIndex;
+
+        if(currentIndex != (range / 2)){
+            Node<T> newPointer = currentPointer.next;
+            newPointer.nextNode = currentPointer.nextNode;
+            newPointer.prevNode = currentPointer.prevNode;
+
+            currentPointer.nextNode = null;
+            currentPointer.prevNode = null;
+
+            currentPointer = currentPointer.next;
+            currentIndex = currentIndex + 1;
+
+            if(currentIndex == (this.size - 1) / 2) {
+                this.head.nextNode = newPointer;
+                this.tail.prevNode = newPointer;
+            }else if(currentIndex <= parentIndex){
+                parentPointer.prevNode = newPointer;
+            }else{
+                parentPointer.nextNode = newPointer;
+            }
+        }
 
         if(currentPointer.prevNode != null){
+            Node<T> prevNode = currentPointer.prevNode;
+            highIndex = currentIndex;
+            currentIndex = currentIndex / 2;
+            updatePointers(currentPointer, prevNode, lowIndex, highIndex, currentIndex, highIndex);
+        }
 
-        }else if(currentPointer.nextNode != null){
-
-        }else{
-
+        if(currentPointer.nextNode != null){
+            Node<T> nextNode = currentPointer.nextNode;
+            lowIndex = currentIndex;
+            currentIndex = currentIndex + (currentIndex / 2);
+            updatePointers(currentPointer, nextNode, lowIndex, highIndex, currentIndex, lowIndex);
         }
     }
 
