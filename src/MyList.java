@@ -8,11 +8,6 @@ public class MyList<T>{
     private Node<T> head;
     private Node<T> tail;
 
-   /* private Node<T> headPointer;
-    private Node<T> tailPointer;
-    int headPointerIndex;
-    int tailPointerIndex;*/
-
     MyList(){
 
     }
@@ -69,8 +64,12 @@ public class MyList<T>{
         this.tail = nodeToBeAdded;
         this.size += 1;
 
-        if(isTimeToAdd()){
+        int currentIndex = (this.size - 2) / 2;
 
+        if(isTimeToAdd()){
+            addPointers(this.tail, this.tail.prevNode, 0, this.size, currentIndex, this.size);
+        }else{
+            updatePointers(this.tail, this.tail.prevNode, 0, this.size, currentIndex, this.size);
         }
     }
 
@@ -98,6 +97,7 @@ public class MyList<T>{
         return nodeToBeDeleted.item;
     }
 
+    // removes the last item and returns its value
     public T pop(){
         return remove(this.size-1);
     }
@@ -107,7 +107,7 @@ public class MyList<T>{
         return getNode(index).item;
     }
 
-    // 1 2 3 4 5 6 7 8 9 10
+    // updates and adds new pointers
     private void addPointers(Node<T> parentPointer, Node<T> currentPointer, int lowIndex, int highIndex, int currentIndex, int parentIndex){
         int range = lowIndex + highIndex;
 
@@ -136,18 +136,40 @@ public class MyList<T>{
             Node<T> prevNode = currentPointer.prevNode;
             highIndex = currentIndex;
             currentIndex = currentIndex / 2;
-            updatePointers(currentPointer, prevNode, lowIndex, highIndex, currentIndex, highIndex);
+            addPointers(currentPointer, prevNode, lowIndex, highIndex, currentIndex, highIndex);
         }
 
         if(currentPointer.nextNode != null){
             Node<T> nextNode = currentPointer.nextNode;
             lowIndex = currentIndex;
             currentIndex = currentIndex + (currentIndex / 2);
-            updatePointers(currentPointer, nextNode, lowIndex, highIndex, currentIndex, lowIndex);
+            addPointers(currentPointer, nextNode, lowIndex, highIndex, currentIndex, lowIndex);
         }
 
         if(isLeaf(currentPointer)){
+            addPointerFrom(currentPointer, 0, currentIndex, true);
+            addPointerFrom(currentPointer, currentIndex, parentIndex, false);
+        }
+    }
 
+    // add pointer to left
+    private void addPointerFrom(Node<T> parent, int lowIndex, int highIndex, boolean isLeft){
+        int gap = (lowIndex + highIndex) / 2;
+
+        Node<T> node = parent;
+
+        if(isLeft){
+            for(int i = 0; i < gap; i++){
+                node = node.prev;
+            }
+
+            parent.prevNode = node;
+        }else{
+            for(int i = 0; i < gap; i++){
+                node = node.next;
+            }
+
+            parent.nextNode = node;
         }
     }
 
