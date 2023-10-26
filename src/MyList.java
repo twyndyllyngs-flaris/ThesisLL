@@ -3,7 +3,7 @@ import java.util.EmptyStackException;
 public class MyList<T>{
     private int size = 0;
 
-    private final int frequency = 1000;
+    private final int frequency = 5;
 
     private Node<T> head;
     private Node<T> tail;
@@ -36,11 +36,20 @@ public class MyList<T>{
     }
 
     public void print(){
-        Node<T> head = this.head;
+        Node<T> node = this.head;
 
         for(int i = 0; i < this.size; i++){
-            System.out.println(head.item);
-            head = head.next;
+            String cell = "[";
+            cell += node.prevNode == null ? "X|" : node.prevNode.item + "|";
+            cell += node.prev == null ? "X|" : node.prev.item + "|";
+            cell += node.item + "|";
+            cell += node.next == null ? "X|" : node.next.item + "|";
+            cell += node.nextNode == null ? "X" : node.nextNode.item + "";
+            cell += "]";
+
+            node = node.next;
+
+            System.out.println(cell);
         }
     }
 
@@ -49,7 +58,6 @@ public class MyList<T>{
     }
 
     // adds a node at the end of the list
-    // 1 2 3 4 5p 6 7 8 9 10p 11 12 13 14p 15 16 17 18 19 20p 21 22 23 24 25 26 27 28 29 30
     public void add(T item){
         Node<T> nodeToBeAdded = new Node<>(item);
 
@@ -61,15 +69,30 @@ public class MyList<T>{
         }
 
         addAfter(this.tail, nodeToBeAdded);
+        nodeToBeAdded.prevNode = this.tail.prevNode;
+        this.tail.prevNode = null;
         this.tail = nodeToBeAdded;
         this.size += 1;
 
         int currentIndex = (this.size - 2) / 2;
 
         if(isTimeToAdd()){
-            addPointers(this.tail, this.tail.prevNode, 0, this.size, currentIndex, this.size);
-        }else{
-            updatePointers(this.tail, this.tail.prevNode, 0, this.size, currentIndex, this.size);
+            if(this.tail.prevNode == null){
+                Node<T> temp = this.tail;
+
+                int gap = (this.size-1) / 2;
+
+                for(int i = 0; i < gap; i++){
+                    temp = temp.prev;
+                }
+
+                this.head.nextNode = temp;
+                this.tail.prevNode = temp;
+            }else{
+                addPointers(this.tail, this.tail.prevNode, 0, this.size-1, currentIndex, this.size-1);
+            }
+        }else if (this.size > this.frequency){
+            updatePointers(this.tail, this.tail.prevNode, 0, this.size-1, currentIndex, this.size-1);
         }
     }
 
@@ -154,17 +177,19 @@ public class MyList<T>{
 
     // add pointer to left
     private void addPointerFrom(Node<T> parent, int lowIndex, int highIndex, boolean isLeft){
-        int gap = (lowIndex + highIndex) / 2;
-
         Node<T> node = parent;
 
         if(isLeft){
+            int gap = (lowIndex + highIndex) / 2;
+
             for(int i = 0; i < gap; i++){
                 node = node.prev;
             }
 
             parent.prevNode = node;
         }else{
+            int gap = ((lowIndex + highIndex) / 2) - lowIndex;
+
             for(int i = 0; i < gap; i++){
                 node = node.next;
             }
@@ -173,6 +198,7 @@ public class MyList<T>{
         }
     }
 
+    // if a node does not have prevNode or nextNode
     private boolean isLeaf(Node<T> node){
         return node.prevNode == null && node.nextNode == null;
     }
@@ -182,20 +208,7 @@ public class MyList<T>{
         return this.size % this.frequency == 0;
     }
 
-    // 0h 1 2p 3 4m 5 6p 7 8 9 10t               11 12 13 14 15
-    // 1 3 5 7 10
-    // 1 3 6 8 11
-    // 1 3 6 9 12
-    // 1 4 7 10 13
-    // 1 4 7 10 14
-    // 1 4 8 11 15
-    // size = 11
-    // parentPointer = tail (10)
-    // currentPointer = 4
-    // currentIndex = 4
-    // lowIndex = 0
-    // highIndex = 10
-    // updates the middle pointers (forwards)
+    // updates the middle pointers (moves right side)
     private void updatePointers(Node<T> parentPointer, Node<T> currentPointer, int lowIndex, int highIndex, int currentIndex, int parentIndex){
         int range = lowIndex + highIndex;
 
@@ -220,7 +233,9 @@ public class MyList<T>{
             }
         }
 
+        //1p 2 3 4p 5 6 7 8p 9 10 11p 12 13 14 15p
         if(currentPointer.prevNode != null){
+            System.out.println("prev " + this.size + " " + currentPointer.item + " " + lowIndex + " " + highIndex + " " + currentIndex + " " + highIndex);
             Node<T> prevNode = currentPointer.prevNode;
             highIndex = currentIndex;
             currentIndex = currentIndex / 2;
@@ -314,10 +329,12 @@ public class MyList<T>{
 
     }
 
+    // given two indexes, finds the index closer to given value
     private boolean lowerPointerIsCloser(int index, int lowerIndex, int higherIndex){
         return (index - lowerIndex) < (higherIndex - index);
     }
 
+    // returns true when given index is in between or equal to given range value
     private boolean isInRange(int index, int lower, int higher){
         return index >= lower && index <= higher;
     }
