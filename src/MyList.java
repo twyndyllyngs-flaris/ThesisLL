@@ -72,9 +72,11 @@ public class MyList<T>{
         nodeToBeAdded.prevNode = this.tail.prevNode;
         this.tail.prevNode = null;
         this.tail = nodeToBeAdded;
-        this.size += 1;
 
-        int currentIndex = (this.size - 2) / 2;
+        //index of current middle pointer
+        int currentIndex = (this.size - 1) / 2;
+
+        this.size += 1;
 
         if(isTimeToAdd()){
             if(this.tail.prevNode == null){
@@ -89,10 +91,10 @@ public class MyList<T>{
                 this.head.nextNode = temp;
                 this.tail.prevNode = temp;
             }else{
-                addPointers(this.tail, this.tail.prevNode, 0, this.size-1, currentIndex, this.size-1);
+                addPointers(this.tail, this.tail.prevNode, 0, this.size-1, currentIndex, this.size-1, 0, this.size-2, currentIndex);
             }
         }else if (this.size > this.frequency){
-            updatePointers(this.tail, this.tail.prevNode, 0, this.size-1, currentIndex, this.size-1);
+            updatePointers(this.tail, this.tail.prevNode, 0, this.size-1, currentIndex, this.size-1, 0, this.size-2, currentIndex);
         }
     }
 
@@ -131,7 +133,7 @@ public class MyList<T>{
     }
 
     // updates and adds new pointers
-    private void addPointers(Node<T> parentPointer, Node<T> currentPointer, int lowIndex, int highIndex, int currentIndex, int parentIndex){
+    private void addPointers(Node<T> parentPointer, Node<T> currentPointer, int lowIndex, int highIndex, int currentIndex, int parentIndex, int originalLow, int originalHigh, int originalIndex){
         int range = lowIndex + highIndex;
 
         if(currentIndex != (range / 2)){
@@ -155,23 +157,23 @@ public class MyList<T>{
             }
         }
 
+        //System.out.println("b " + lowIndex + " " + currentIndex + " " + highIndex + " " + originalLow + " " + originalIndex + " " + originalHigh);
+
         if(currentPointer.prevNode != null){
             Node<T> prevNode = currentPointer.prevNode;
-            highIndex = currentIndex;
-            currentIndex = currentIndex / 2;
-            addPointers(currentPointer, prevNode, lowIndex, highIndex, currentIndex, highIndex);
+            int prevIndex = (originalLow + originalIndex) / 2;
+            addPointers(currentPointer, prevNode, lowIndex, currentIndex, prevIndex, highIndex, originalLow, originalIndex, prevIndex);
         }
 
         if(currentPointer.nextNode != null){
             Node<T> nextNode = currentPointer.nextNode;
-            lowIndex = currentIndex;
-            currentIndex = currentIndex + (currentIndex / 2);
-            addPointers(currentPointer, nextNode, lowIndex, highIndex, currentIndex, lowIndex);
+            int nextIndex = (originalIndex + originalHigh) / 2;
+            addPointers(currentPointer, nextNode, currentIndex, highIndex, nextIndex, lowIndex, originalIndex, originalHigh, nextIndex);
         }
 
         if(isLeaf(currentPointer)){
-            addPointerFrom(currentPointer, 0, currentIndex, true);
-            addPointerFrom(currentPointer, currentIndex, parentIndex, false);
+            addPointerFrom(currentPointer, lowIndex, currentIndex, true);
+            addPointerFrom(currentPointer, currentIndex, highIndex, false);
         }
     }
 
@@ -179,8 +181,10 @@ public class MyList<T>{
     private void addPointerFrom(Node<T> parent, int lowIndex, int highIndex, boolean isLeft){
         Node<T> node = parent;
 
+        System.out.println(lowIndex + " " + highIndex + " " + isLeft);
+
         if(isLeft){
-            int gap = (lowIndex + highIndex) / 2;
+            int gap = (int)Math.ceil((double) (highIndex - lowIndex) / 2);
 
             for(int i = 0; i < gap; i++){
                 node = node.prev;
@@ -209,7 +213,7 @@ public class MyList<T>{
     }
 
     // updates the middle pointers (moves right side)
-    private void updatePointers(Node<T> parentPointer, Node<T> currentPointer, int lowIndex, int highIndex, int currentIndex, int parentIndex){
+    private void updatePointers(Node<T> parentPointer, Node<T> currentPointer, int lowIndex, int highIndex, int currentIndex, int parentIndex, int originalLow, int originalHigh, int originalIndex){
         int range = lowIndex + highIndex;
 
         if(currentIndex != (range / 2)){
@@ -233,20 +237,18 @@ public class MyList<T>{
             }
         }
 
-        //1p 2 3 4p 5 6 7 8p 9 10 11p 12 13 14 15p
+        //System.out.println("b " + lowIndex + " " + currentIndex + " " + highIndex + " " + originalLow + " " + originalIndex + " " + originalHigh);
+
         if(currentPointer.prevNode != null){
-            System.out.println("prev " + this.size + " " + currentPointer.item + " " + lowIndex + " " + highIndex + " " + currentIndex + " " + highIndex);
             Node<T> prevNode = currentPointer.prevNode;
-            highIndex = currentIndex;
-            currentIndex = currentIndex / 2;
-            updatePointers(currentPointer, prevNode, lowIndex, highIndex, currentIndex, highIndex);
+            int prevIndex = (originalLow + originalIndex) / 2;
+            updatePointers(currentPointer, prevNode, lowIndex, currentIndex, prevIndex, highIndex, originalLow, originalIndex, prevIndex);
         }
 
         if(currentPointer.nextNode != null){
             Node<T> nextNode = currentPointer.nextNode;
-            lowIndex = currentIndex;
-            currentIndex = currentIndex + (currentIndex / 2);
-            updatePointers(currentPointer, nextNode, lowIndex, highIndex, currentIndex, lowIndex);
+            int nextIndex = (originalIndex + originalHigh) / 2;
+            updatePointers(currentPointer, nextNode, currentIndex, highIndex, nextIndex, lowIndex, originalIndex, originalHigh, nextIndex);
         }
     }
 
