@@ -157,8 +157,6 @@ public class MyList<T>{
             }
         }
 
-        //System.out.println("b " + lowIndex + " " + currentIndex + " " + highIndex + " " + originalLow + " " + originalIndex + " " + originalHigh);
-
         if(currentPointer.prevNode != null){
             Node<T> prevNode = currentPointer.prevNode;
             int prevIndex = (originalLow + originalIndex) / 2;
@@ -180,8 +178,6 @@ public class MyList<T>{
     // add pointer to left
     private void addPointerFrom(Node<T> parent, int lowIndex, int highIndex, boolean isLeft){
         Node<T> node = parent;
-
-        System.out.println(lowIndex + " " + highIndex + " " + isLeft);
 
         if(isLeft){
             int gap = (int)Math.ceil((double) (highIndex - lowIndex) / 2);
@@ -236,8 +232,6 @@ public class MyList<T>{
                 parentPointer.nextNode = newPointer;
             }
         }
-
-        //System.out.println("b " + lowIndex + " " + currentIndex + " " + highIndex + " " + originalLow + " " + originalIndex + " " + originalHigh);
 
         if(currentPointer.prevNode != null){
             Node<T> prevNode = currentPointer.prevNode;
