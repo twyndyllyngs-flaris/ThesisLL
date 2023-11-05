@@ -1,4 +1,5 @@
 import java.util.EmptyStackException;
+import java.util.Locale;
 
 public class MyList<T>{
     private int size = 0;
@@ -129,6 +130,14 @@ public class MyList<T>{
 
     // returns the value/item of the given index node
     public T get(int index){
+        if(isEmpty()){
+            throw new EmptyStackException();
+        }
+
+        if(index < 0 || index >= this.size){
+            throw new IndexOutOfBoundsException();
+        }
+
         return getNode(index).item;
     }
 
@@ -157,6 +166,7 @@ public class MyList<T>{
             }
         }
 
+        // recursions
         if(currentPointer.prevNode != null){
             Node<T> prevNode = currentPointer.prevNode;
             int prevIndex = (originalLow + originalIndex) / 2;
@@ -283,33 +293,36 @@ public class MyList<T>{
 
     // gets the closest node pivot pointer from a given index
     private ReturnObject<T> getClosest(int index){
-        if(isEmpty()){
-            throw new EmptyStackException();
-        }
-
-        if(index < 0 || index >= this.size){
-            throw new IndexOutOfBoundsException();
-        }
-
         Node<T> lowerPointer = this.head;
         Node<T> higherPointer = this.tail;
         int lowerIndex = 0;
         int higherIndex = this.size-1;
 
-        while(isInRange(index, lowerIndex, higherIndex) && lowerPointer.next != null){
+
+        while(isInRange(index, lowerIndex, higherIndex) && lowerPointer.nextNode != null && higherPointer.prevNode != null){
             int sumRange = lowerIndex + higherIndex;
 
             if((index - lowerIndex) < (higherIndex - index)){
                 // head is closer
-                higherPointer = higherPointer.prevNode;
-                higherIndex = higherIndex - (sumRange - index);
+                if(lowerPointer.item != higherPointer.item){
+                    higherPointer = higherPointer.prevNode;
+                }else{
+                    higherPointer = lowerPointer.nextNode;
+                }
+
+                higherIndex = sumRange / 2;
 
                 if(index == lowerIndex) {
                     return new ReturnObject<>(lowerPointer, lowerIndex, true);
                 }
             }else{
-                lowerPointer = lowerPointer.nextNode;
-                lowerIndex = lowerIndex + (sumRange - index);
+                if(lowerPointer.item != higherPointer.item){
+                    lowerPointer = higherPointer.prevNode;
+                }else{
+                    lowerPointer = lowerPointer.nextNode;
+                }
+
+                lowerIndex = sumRange / 2;
 
                 if(index == higherIndex){
                     return new ReturnObject<>(higherPointer, higherIndex, false);
@@ -338,4 +351,7 @@ public class MyList<T>{
     private boolean isEmpty(){
         return this.size == 0;
     }
+
+    // add isEmpty function
+
 }

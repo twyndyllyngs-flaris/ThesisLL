@@ -2,7 +2,7 @@ import java.util.HashMap;
 
 public class Main {
     public static void main(String[] args) {
-        DynamicArray<Integer> a = new DynamicArray<>();
+        MyList<Integer> a = new MyList<>();
 
         a.add(1);
         a.add(2);
@@ -12,11 +12,13 @@ public class Main {
         a.add(6);
         a.add(7);
         a.add(8);
+        a.add(9);
+        a.add(10);
 
-        a.delete(3);
-        System.out.println(a.get(3));
+        for(int i = 0; i < a.size(); i++){
+            System.out.println(a.get(i));
+        }
 
-        System.out.println(a.size());
         a.print();
     }
 }

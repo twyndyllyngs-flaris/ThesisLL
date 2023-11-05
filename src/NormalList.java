@@ -34,9 +34,8 @@ public class NormalList<T>{
         Node<T> node = this.head;
 
         for(int i = 0; i < this.size; i++){
-
-            System.out.println(head.item);
-            head = head.next;
+            System.out.println(node.item);
+            node = node.next;
         }
 
     }
