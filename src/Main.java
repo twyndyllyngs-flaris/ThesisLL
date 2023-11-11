@@ -14,17 +14,13 @@ public class Main {
         a.add(8);
         a.add(9);
         a.add(10);
-        a.add(11);
-        a.add(12);
-        a.add(13);
-        a.add(14);
-        a.add(15);
+
 
         /*for(int i = 0; i < a.size(); i++){
             System.out.println(a.get(i));
         }*/
 
-        a.remove(1);
+        //a.remove(3);
 
         a.print();
     }
