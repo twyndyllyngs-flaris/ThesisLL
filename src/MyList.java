@@ -1,5 +1,4 @@
 import java.util.EmptyStackException;
-import java.util.Locale;
 
 public class MyList<T>{
     private int size = 0;
@@ -32,6 +31,22 @@ public class MyList<T>{
         ReturnObject(Node<T> node, int index, boolean isLowerClosest){
             this.node = node;
             this.index = index;
+            this.isLowerClosest = isLowerClosest;
+        }
+    }
+
+    private static class RemoveObject<T>{
+        Node<T> node, parent;
+        int originalLower, originalHigher, lowerIndex, higherIndex;
+        boolean isLowerClosest;
+
+        RemoveObject(Node<T> node, Node<T> parent, int originalLower, int originalHigher, int lowerIndex, int higherIndex, boolean isLowerClosest){
+            this.node = node;
+            this.parent = parent;
+            this.originalLower = originalLower;
+            this.originalHigher = originalHigher;
+            this.lowerIndex = lowerIndex;
+            this.higherIndex = higherIndex;
             this.isLowerClosest = isLowerClosest;
         }
     }
@@ -100,26 +115,91 @@ public class MyList<T>{
     }
 
     // removes a node in the list and returns its value
+    // 1 2 3 4 5 6 7 8 9 10
     public T remove(int index){
-        Node<T> nodeToBeDeleted = getNode(index);
-        Node<T> nextNode = nodeToBeDeleted.next;
-        Node<T> prevNode = nodeToBeDeleted.prev;
+        if(index < 0){
+            throw new EmptyStackException();
+        }
+
+        if(index >= this.size){
+            throw new IndexOutOfBoundsException();
+        }
+
+        RemoveObject<T> details = getNodeDetails(index);
+        Node<T> nodeToBeDeleted = details.node;
+        Node<T> next = nodeToBeDeleted.next;
+        Node<T> prev = nodeToBeDeleted.prev;
+        Node<T> nextNode = nodeToBeDeleted.nextNode;
+        Node<T> prevNode = nodeToBeDeleted.prevNode;
+        Node<T> parent = details.parent;
+        int lowIndex = details.originalLower;
+        int highIndex = details.originalHigher;
+        boolean isLowerClosest = details.isLowerClosest;
 
         if(this.size == 1){
             this.head = null;
             this.tail = null;
         } else if(nodeToBeDeleted == this.head){
-            nextNode.prev = null;
-            this.head = nextNode;
+            next.prev = null;
+            next.nextNode = this.head.nextNode;
+            this.head = next;
         }else if(nodeToBeDeleted == tail){
-            prevNode.next = null;
-            this.tail = prevNode;
+            prev.next = null;
+            prev.prevNode = this.tail.prevNode;
+            this.tail = prev;
+        }else if(parent.prevNode == nodeToBeDeleted || parent.nextNode == nodeToBeDeleted){
+            next.prev = prev;
+            prev.next = next;
+
+            int newMiddleIndex = (lowIndex + highIndex - 1 ) / 2;
+
+            if(newMiddleIndex != index){
+                // move left
+                prev.nextNode = nextNode;
+                prev.prevNode = prevNode;
+
+                if(index == (this.size-1) / 2){
+                    // index is the first middle, have to move both head and tail pointer
+                    this.head.nextNode = prev;
+                    this.tail.prevNode = prev;
+                }else if(parent.prevNode == nodeToBeDeleted){
+                    parent.prevNode = prev;
+                }else{
+                    parent.nextNode = prev;
+                }
+            }else{
+                // move right
+                next.nextNode = nextNode;
+                next.prevNode = prevNode;
+
+                if(index == (this.size-1) / 2){
+                    // index is the first middle, have to move both head and tail pointer
+                    this.head.nextNode = next;
+                    this.tail.prevNode = next;
+                }else if(parent.prevNode == nodeToBeDeleted){
+                    parent.prevNode = next;
+                }else{
+                    parent.nextNode = next;
+                }
+            }
         }else{
-            nextNode.prev = prevNode;
-            prevNode.next = nextNode;
+            next.prev = prev;
+            prev.next = next;
         }
 
+        boolean isTimeToRemove = isTimeToAdd();
+
         this.size -= 1;
+
+        if(isTimeToRemove){
+            if(this.size == this.frequency){
+                this.head.nextNode = null;
+                this.tail.prevNode = null;
+            }else{
+                removePointers(this.head.nextNode);
+            }
+        }
+
         return nodeToBeDeleted.item;
     }
 
@@ -139,6 +219,97 @@ public class MyList<T>{
         }
 
         return getNode(index).item;
+    }
+
+    private void removePointers(Node<T> currentPointer){
+        // recursions
+        if(currentPointer.prevNode != null && currentPointer.prevNode.prevNode != null){
+            removePointers(currentPointer.prevNode);
+        }else{
+            currentPointer.prevNode = null;
+        }
+
+        if(currentPointer.nextNode != null && currentPointer.nextNode.nextNode != null){
+            removePointers(currentPointer.nextNode);
+        }else{
+            currentPointer.nextNode = null;
+        }
+    }
+
+    private RemoveObject<T> getClosestNodeDetails(int index){
+        Node<T> lowerPointer = this.head;
+        Node<T> higherPointer = this.tail;
+        Node<T> nextPointer = lowerPointer.nextNode;
+        Node<T> parent = this.head;
+        int lowerIndex = 0;
+        int higherIndex = this.size-1;
+        int originalLower = lowerIndex;
+        int originalHigher = higherIndex;
+
+        while(isInRange(index, lowerIndex, higherIndex) && nextPointer != null){
+            int sumRange = lowerIndex + higherIndex;
+
+            if(lowerPointerIsCloser(index, lowerIndex, higherIndex)){
+                if(index == lowerIndex) {
+                    if(parent == this.head){
+                        parent = higherPointer;
+                    }
+                    return new RemoveObject<>(lowerPointer, parent, originalLower, originalHigher, lowerIndex, higherIndex, true);
+                }
+
+                parent = higherPointer;
+                higherPointer = nextPointer;
+                nextPointer = nextPointer.prevNode;
+
+                originalHigher = higherIndex;
+                originalLower = lowerIndex;
+                higherIndex = sumRange / 2;
+            }else{
+                if(index == higherIndex){
+                    if(parent == this.tail){
+                        parent = lowerPointer;
+                    }
+                    return new RemoveObject<>(higherPointer, parent, originalLower, originalHigher, lowerIndex, higherIndex, false);
+                }
+
+                parent = lowerPointer;
+                lowerPointer = nextPointer;
+                nextPointer = nextPointer.nextNode;
+
+                originalLower = lowerIndex;
+                originalHigher = higherIndex;
+                lowerIndex = sumRange / 2;
+            }
+        }
+
+        if(lowerPointerIsCloser(index, lowerIndex, higherIndex)){
+            return new RemoveObject<>(lowerPointer, parent, originalLower, originalHigher, lowerIndex, higherIndex, true);
+        } else{
+            return new RemoveObject<>(higherPointer, parent, originalLower, originalHigher, lowerIndex, higherIndex, false);
+        }
+    }
+
+    private RemoveObject<T> getNodeDetails(int index){
+        RemoveObject<T> returnObject = getClosestNodeDetails(index);
+
+        Node<T> closestNode = returnObject.node;
+        boolean isLowerClosest = returnObject.isLowerClosest;
+
+        if(isLowerClosest){
+            int closestIndex = returnObject.lowerIndex;
+            for(int i = closestIndex; i < index; i++){
+                closestNode = closestNode.next;
+            }
+        }else{
+            int closestIndex = returnObject.higherIndex;
+            for(int i = closestIndex; i > index; i--){
+                closestNode = closestNode.prev;
+            }
+        }
+
+        returnObject.node = closestNode;
+
+        return returnObject;
     }
 
     // updates and adds new pointers
@@ -277,7 +448,7 @@ public class MyList<T>{
         Node<T> pointer = returnObject.node;
         int closestIndex = returnObject.index;
         boolean isLowerClosest = returnObject.isLowerClosest;
-
+        //System.out.println("c" + pointer.item + " " + closestIndex + " " + isLowerClosest);
         if(isLowerClosest){
             for(int i = closestIndex; i < index; i++){
                 pointer = pointer.next;
@@ -290,25 +461,21 @@ public class MyList<T>{
 
         return pointer;
     }
-
+    // 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
     // gets the closest node pivot pointer from a given index
     private ReturnObject<T> getClosest(int index){
         Node<T> lowerPointer = this.head;
         Node<T> higherPointer = this.tail;
+        Node<T> nextPointer = lowerPointer.nextNode;
         int lowerIndex = 0;
         int higherIndex = this.size-1;
 
-
-        while(isInRange(index, lowerIndex, higherIndex) && lowerPointer.nextNode != null && higherPointer.prevNode != null){
+        while(isInRange(index, lowerIndex, higherIndex) && nextPointer != null){
             int sumRange = lowerIndex + higherIndex;
 
-            if((index - lowerIndex) < (higherIndex - index)){
-                // head is closer
-                if(lowerPointer.item != higherPointer.item){
-                    higherPointer = higherPointer.prevNode;
-                }else{
-                    higherPointer = lowerPointer.nextNode;
-                }
+            if(lowerPointerIsCloser(index, lowerIndex, higherIndex)){
+                higherPointer = nextPointer;
+                nextPointer = nextPointer.prevNode;
 
                 higherIndex = sumRange / 2;
 
@@ -316,11 +483,8 @@ public class MyList<T>{
                     return new ReturnObject<>(lowerPointer, lowerIndex, true);
                 }
             }else{
-                if(lowerPointer.item != higherPointer.item){
-                    lowerPointer = higherPointer.prevNode;
-                }else{
-                    lowerPointer = lowerPointer.nextNode;
-                }
+                lowerPointer = nextPointer;
+                nextPointer = nextPointer.nextNode;
 
                 lowerIndex = sumRange / 2;
 

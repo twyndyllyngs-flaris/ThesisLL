@@ -20,17 +20,11 @@ public class NormalList<T>{
     }
 
     public void print(){
-       /* String str1 = String.format("%d", 101);          // Integer value
-        String str2 = String.format("%s", "Amar Singh"); // String value
-        String str3 = String.format("%f", 101.00);       // Float value
-        String str4 = String.format("%x", 101);          // Hexadecimal value
-        String str5 = String.format("%c", 'c');          // Char value  */
         if(isEmpty()){
             System.out.println("List is currently empty");
             return;
         }
 
-        //0[PN|P|I|R|RN] ->
         Node<T> node = this.head;
 
         for(int i = 0; i < this.size; i++){
